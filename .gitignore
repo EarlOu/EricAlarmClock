@@ -2,3 +2,4 @@ bin*
 obj*
 gen*
 *.DS_Store
+image_src*
