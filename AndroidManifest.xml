@@ -5,19 +5,29 @@
     android:versionName="1.0" >
 
     <uses-sdk android:minSdkVersion="8" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />  
 
     <application
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name" >
         <activity
             android:name=".EricAlarmClockActivity"
-            android:label="@string/app_name" >
+            android:label="@string/app_name"
+            android:screenOrientation="portrait" 
+            android:theme="@style/NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        
+        <receiver android:name=".AlarmReceiver" />
+        <activity android:name="AlarmActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/NoActionBar"/>
+        
+        
     </application>
 
 </manifest>
