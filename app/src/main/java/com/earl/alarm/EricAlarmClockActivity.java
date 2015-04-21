@@ -20,6 +20,8 @@ import android.widget.Toast;
 
 public class EricAlarmClockActivity extends Activity implements OnClickListener {
 
+    private View mSettingView;
+    private View mWaitingView;
     private DatePicker mDatePicker;
     private TimePicker mTimePicker;
     private Button mSubmitBtn;
@@ -29,7 +31,7 @@ public class EricAlarmClockActivity extends Activity implements OnClickListener 
     private AlarmManager mAlarmManager;
 
     private long mTime;
-    private boolean mIsSet;
+    private boolean mIsTimeSet;
 
     public static final String PREF = "pref";
     public static final String PREF_TIME = "time";
@@ -38,76 +40,62 @@ public class EricAlarmClockActivity extends Activity implements OnClickListener 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         mAlarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        getPrefDate();
-
-        if(!mIsSet) {
-            initSetTimeView();
-        } else {
-            resetTimer();
-            initWaitingView();
-        }
-
-    }
-
-    private void getPrefDate() {
         SharedPreferences pref = getSharedPreferences(PREF, 0);
-        mIsSet = pref.getBoolean(PREF_IS_SET, false);
+        mIsTimeSet = pref.getBoolean(PREF_IS_SET, false);
         mTime = pref.getLong(PREF_TIME, 0);
-    }
 
-    private void initSetTimeView() {
         setContentView(R.layout.main);
-
+        mSettingView = findViewById(R.id.setting_container);
+        mWaitingView = findViewById(R.id.waiting_container);
         mDatePicker = (DatePicker) findViewById(R.id.datePicker);
         mTimePicker = (TimePicker) findViewById(R.id.timePicker);
         mSubmitBtn = (Button) findViewById(R.id.submit);
-
-        mSubmitBtn.setOnClickListener(this);
-    }
-
-    private void initWaitingView() {
-        setContentView(R.layout.waiting);
         mTimeText = (TextView) findViewById(R.id.time);
         mCancelBtn = (Button) findViewById(R.id.cancel);
 
+        mSubmitBtn.setOnClickListener(this);
         mCancelBtn.setOnClickListener(this);
 
-        Date d = new Date(mTime);
-        DateFormat timeFormat =
-                android.text.format.DateFormat.getTimeFormat(this);
-        DateFormat dateFormat =
-                android.text.format.DateFormat.getDateFormat(this);
-
-        mTimeText.setText(dateFormat.format(d)+" "+timeFormat.format(d));
-
+        if (mIsTimeSet) {
+            mSettingView.setVisibility(View.GONE);
+            mWaitingView.setVisibility(View.VISIBLE);
+            setTimeText();
+        } else {
+            mWaitingView.setVisibility(View.GONE);
+            mSettingView.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
     public void onClick(View view) {
         if(view == mSubmitBtn) {
-            setTime();
+            long time = getTime();
+            if (getTime() < System.currentTimeMillis()) {
+                Toast.makeText(this, "æ™‚é–“éŒ¯èª¤", Toast.LENGTH_SHORT).show();
+            } else {
+                setAlarm(time);
+                mSettingView.setVisibility(View.GONE);
+                mWaitingView.setVisibility(View.VISIBLE);
+                setTimeText();
+            }
         } else if (view == mCancelBtn){
-            cancelTime();
-            initSetTimeView();
+            cancelAlarm();
+            mWaitingView.setVisibility(View.GONE);
+            mSettingView.setVisibility(View.VISIBLE);
         }
     }
 
-    private void resetTimer() {
-        Intent intent = new Intent(this, AlarmReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this
-                , 0, intent, 0);
-        mAlarmManager.cancel(pendingIntent);
-        mAlarmManager.set(AlarmManager.RTC_WAKEUP, mTime, pendingIntent);
+    private void setTimeText() {
+        Date d = new Date(mTime);
+        DateFormat timeFormat =
+                android.text.format.DateFormat.getTimeFormat(this);
+        DateFormat dateFormat =
+                android.text.format.DateFormat.getDateFormat(this);
+        mTimeText.setText(dateFormat.format(d)+" "+timeFormat.format(d));
     }
 
-    private void cancelTime() {
+    private void cancelAlarm() {
         Intent intent = new Intent(this, AlarmReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this
                 , 0, intent, 0);
@@ -120,37 +108,29 @@ public class EricAlarmClockActivity extends Activity implements OnClickListener 
         editor.commit();
     }
 
-    private void setTime() {
+    private long getTime() {
         Calendar c = Calendar.getInstance();
         c.set(mDatePicker.getYear()
                 , mDatePicker.getMonth()
                 , mDatePicker.getDayOfMonth()
                 , mTimePicker.getCurrentHour()
                 , mTimePicker.getCurrentMinute());
+        return c.getTimeInMillis();
+    }
 
-        if(c.getTimeInMillis() < System.currentTimeMillis()) {
-            Toast.makeText(this, "½Ð§â¾xÄÁ³]¦b¥¼¨Ó§a¡I", Toast.LENGTH_SHORT).show();
-            return;
-        }
+    private void setAlarm(long time) {
+        mIsTimeSet = true;
+        mTime = time;
 
         Intent intent = new Intent(this, AlarmReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this
                 , 0, intent, 0);
+        mAlarmManager.set(AlarmManager.RTC_WAKEUP, time, pendingIntent);
 
-        mAlarmManager.set(AlarmManager.RTC_WAKEUP, c.getTimeInMillis(), pendingIntent);
-
-        save(c.getTimeInMillis());
-
-        initWaitingView();
-    }
-
-    private void save(long time) {
         SharedPreferences pref = getSharedPreferences(PREF, 0);
         SharedPreferences.Editor editor = pref.edit();
         editor.putBoolean(PREF_IS_SET, true);
         editor.putLong(PREF_TIME, time);
-        mIsSet = true;
-        mTime = time;
         editor.commit();
     }
 }

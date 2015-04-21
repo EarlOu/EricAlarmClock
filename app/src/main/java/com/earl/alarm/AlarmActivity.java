@@ -11,6 +11,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnGestureListener;
 import android.view.MotionEvent;
@@ -24,19 +25,18 @@ public class AlarmActivity extends Activity implements OnGestureListener {
 
     private MediaPlayer mMediaPlayer;
     private ImageView mBackground;
-    private View mStopView;
     private ProgressBar mProgress;
+
+    private GestureDetector mDetector;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.alarm);
+        mDetector = new GestureDetector(this);
         mBackground = (ImageView)findViewById(R.id.background);
-        mStopView = findViewById(R.id.stop_alarm);
         mProgress = (ProgressBar) findViewById(R.id.progressBar);
         mProgress.setMax(1000);
-
-        setStopView();
 
         Uri alert = getDefaultAlarm();
         mMediaPlayer = new MediaPlayer();
@@ -53,7 +53,6 @@ public class AlarmActivity extends Activity implements OnGestureListener {
         }
 
         mStopTask.execute();
-
     }
 
     private AsyncTask<Void, Void, Void> mStopTask = new AsyncTask<Void, Void, Void>() {
@@ -74,7 +73,7 @@ public class AlarmActivity extends Activity implements OnGestureListener {
         @Override
         protected void onProgressUpdate(Void...voids) {
             int progress = mProgress.getProgress();
-            progress-=(int)Math.ceil(progress*0.015);
+            progress-=(int)Math.ceil(progress*0.017);
             if(progress < 0) progress = 0;
             mProgress.setProgress(progress);
         }
@@ -86,32 +85,24 @@ public class AlarmActivity extends Activity implements OnGestureListener {
 
     };
 
-    private void setStopView() {
-        final GestureDetector gd = new GestureDetector(this);
-        mStopView.setOnTouchListener(new OnTouchListener() {
-            public boolean onTouch(View v, MotionEvent ev) {
-                return gd.onTouchEvent(ev);
-            }
-        });
+    @Override
+    public boolean onTouchEvent(MotionEvent ev) {
+        return mDetector.onTouchEvent(ev);
     }
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         mBackground.setBackgroundResource(R.drawable.alarm_back);
-        startBackgroundAnimation();
-    }
-
-    private void startBackgroundAnimation() {
         AnimationDrawable anim = (AnimationDrawable) mBackground.getBackground();
         anim.start();
     }
 
     private void setMaxVolumn() {
-        AudioManager audioManager = (AudioManager)getSystemService(
-                Context.AUDIO_SERVICE);
-        audioManager.setStreamVolume(AudioManager.STREAM_ALARM
-                , audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
-                , AudioManager.FLAG_VIBRATE);
+//        AudioManager audioManager = (AudioManager)getSystemService(
+//                Context.AUDIO_SERVICE);
+//        audioManager.setStreamVolume(AudioManager.STREAM_ALARM
+//                , audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
+//                , AudioManager.FLAG_VIBRATE);
     }
 
     private Uri getDefaultAlarm() {
@@ -127,7 +118,7 @@ public class AlarmActivity extends Activity implements OnGestureListener {
 
     @Override
     public void onBackPressed() {
-        Toast.makeText(this, "關不掉關不掉......", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, getText(R.string.lalala), Toast.LENGTH_SHORT).show();
     }
 
     public void onDestroy() {
@@ -151,11 +142,11 @@ public class AlarmActivity extends Activity implements OnGestureListener {
     }
 
     @Override
-    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
-            float distanceY) {
-
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float dx,
+            float dy) {
         int progress = mProgress.getProgress();
-        progress+=(int)((Math.abs((distanceX)+Math.abs(distanceY)))/12.0);
+        DisplayMetrics m = getResources().getDisplayMetrics();
+        progress += (int) (Math.sqrt(dx * dx + dy * dy) / m.density / 8.0);
         mProgress.setProgress(progress);
         return true;
     }
