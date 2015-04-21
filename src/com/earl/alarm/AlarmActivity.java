@@ -74,7 +74,7 @@ public class AlarmActivity extends Activity implements OnGestureListener {
         @Override
         protected void onProgressUpdate(Void...voids) {
             int progress = mProgress.getProgress();
-            progress-=(int)Math.ceil(progress*0.016);
+            progress-=(int)Math.ceil(progress*0.015);
             if(progress < 0) progress = 0;
             mProgress.setProgress(progress);
         }
