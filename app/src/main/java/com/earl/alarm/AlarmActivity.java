@@ -98,11 +98,11 @@ public class AlarmActivity extends Activity implements OnGestureListener {
     }
 
     private void setMaxVolumn() {
-//        AudioManager audioManager = (AudioManager)getSystemService(
-//                Context.AUDIO_SERVICE);
-//        audioManager.setStreamVolume(AudioManager.STREAM_ALARM
-//                , audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
-//                , AudioManager.FLAG_VIBRATE);
+        AudioManager audioManager = (AudioManager)getSystemService(
+                Context.AUDIO_SERVICE);
+        audioManager.setStreamVolume(AudioManager.STREAM_ALARM
+                , audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
+                , AudioManager.FLAG_VIBRATE);
     }
 
     private Uri getDefaultAlarm() {
