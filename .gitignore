@@ -1,5 +1,7 @@
-bin*
-obj*
-gen*
-*.DS_Store
-image_src*
+.gradle
+/local.properties
+/.idea/workspace.xml
+/.idea/libraries
+.DS_Store
+/build
+app/build
